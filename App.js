@@ -7,16 +7,20 @@ import {
   StyleSheet,
   Text,
   TouchableOpacity,
+  Alert,
+  AsyncStorage,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function App() {
   // state 만들기
   const [todos, setTodos] = useState([]);
   const [tag, setTag] = useState("js"); // 기본 setting: js (tag: js / react / coding test)
   const [text, setText] = useState("");
+  const [editText, setEditText] = useState("");
 
   // new todo
   const newTodo = {
@@ -42,6 +46,58 @@ export default function App() {
     newTodos[idx].isDone = !newTodos[idx].isDone;
     setTodos(newTodos);
   };
+
+  // delete Todo
+  const deleteTodo = (key) => {
+    Alert.alert("Todo 삭제", "정말 삭제하시겠습니까?", [
+      {
+        text: "취소",
+        style: "cancel",
+      },
+      {
+        text: "삭제",
+        onPress: () => {
+          const newTodos = todos.filter((todo) => todo.id !== id);
+          setTodos(newTodos);
+        },
+      },
+    ]);
+  };
+
+  // edit Todo
+  const editTodo = (id) => {
+    // id 값 받아서 해당 배열 요소를 찾아 그 해당 배열만 수정하기
+    const newTodos = [...todos];
+    const idx = newTodos.findIndex((todo) => todo.id === id);
+    newTodos[idx].text = editText;
+    newTodos[idx].isEdit = false;
+    setTodos(newTodos);
+  };
+
+  // tag
+  const setTagTodo = async (tag) => {
+    setTag(tag);
+    await AsyncStorage.setItem("tag", tag);
+  };
+
+  useEffect(() => {
+    // 현재의 최신 todos를 AsyncStorage에 저장
+    const saveTodos = async () => {
+      await AsyncStorage.setItem("todos", JSON.stringify(todos));
+    };
+    if (todos.length > 0) saveTodos();
+  }, [todos]);
+
+  useEffect(() => {
+    const getData = async () => {
+      const resp_todos = await AsyncStorage.getItem("todos"); // todos 배열
+      const resp_tag = await AsyncStorage.getItem("tag"); // undefiend / null
+
+      setTodos(JSON.parse(resp_todos));
+      setTagTodo(resp_tag ?? "js");
+    };
+    getData();
+  }, []);
 
   return (
     <SafeAreaView style={styles.safearea}>
@@ -93,29 +149,46 @@ export default function App() {
             if (tag === todo.tag) {
               return (
                 <View key={todo.id} style={styles.TodoItem}>
-                  <Text
-                    style={{
-                      textDecorationLine: todo.isDone ? "line-through" : "none",
-                    }}
-                  >
-                    {todo.text}
-                  </Text>
+                  {todo.isEdit ? (
+                    <TextInput
+                      onSubmitEditing={() => editTodo(todo.id)}
+                      onChangeText={setEditText}
+                      value={editText}
+                      style={{ backgroundColor: "white", flex: 1 }}
+                    />
+                  ) : (
+                    <Text
+                      style={{
+                        textDecorationLine: todo.isDone
+                          ? "line-through"
+                          : "none",
+                      }}
+                    >
+                      {todo.text}
+                    </Text>
+                  )}
+
                   <View style={{ flexDirection: "row" }}>
                     <TouchableOpacity onPress={() => setDone(todo.id)}>
                       <AntDesign name="checksquare" size={24} color="black" />
                     </TouchableOpacity>
-                    <Feather
-                      style={{ marginLeft: 10 }}
-                      name="edit"
-                      size={24}
-                      color="black"
-                    />
-                    <AntDesign
-                      style={{ marginLeft: 10 }}
-                      name="delete"
-                      size={24}
-                      color="black"
-                    />
+                    <TouchableOpacity onPress={() => setEdit(todo.id)}>
+                      <Feather
+                        style={{ marginLeft: 10 }}
+                        name="edit"
+                        size={24}
+                        color="black"
+                      />
+                    </TouchableOpacity>
+
+                    <TouchableOpacity onPress={() => deleteTodo(todo.id)}>
+                      <AntDesign
+                        style={{ marginLeft: 10 }}
+                        name="delete"
+                        size={24}
+                        color="black"
+                      />
+                    </TouchableOpacity>
                   </View>
                 </View>
               );
