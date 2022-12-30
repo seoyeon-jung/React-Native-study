@@ -28,6 +28,12 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "dc23868b-86fc-4d6e-8bda-7046c37d86a9"
+      }
+    },
+    "owner": "seoyeon-jung"
   }
 }
