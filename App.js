@@ -6,69 +6,121 @@ import {
   ScrollView,
   StyleSheet,
   Text,
+  TouchableOpacity,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
+import { useState } from "react";
 
 export default function App() {
+  // state 만들기
+  const [todos, setTodos] = useState([]);
+  const [tag, setTag] = useState("js"); // 기본 setting: js (tag: js / react / coding test)
+  const [text, setText] = useState("");
+
+  // new todo
+  const newTodo = {
+    id: Date.now(),
+    text,
+    isDone: false,
+    isEdit: false,
+    tag,
+  };
+
+  // add Todo
+  const addTodo = () => {
+    setTodos((prev) => [...prev, newTodo]);
+    setText("");
+  };
+
+  // Set Done (완료 toggling)
+  const setDone = (id) => {
+    // id를 매개변수로 받아 완료하고 싶은 배열의 요소 찾기
+    // 배열의 요소의 isDone 값을 토글링한 후에 setTodos
+    const newTodos = [...todos];
+    const idx = newTodos.findIndex((todo) => todo.id === id);
+    newTodos[idx].isDone = !newTodos[idx].isDone;
+    setTodos(newTodos);
+  };
+
   return (
     <SafeAreaView style={styles.safearea}>
       <StatusBar style="auto" />
       <View style={styles.safearea}>
         {/* Button 3개 (범위 나누기) */}
         <View style={styles.TagBtnList}>
-          <View style={styles.TagBtn}>
+          <TouchableOpacity
+            onPress={() => setTag("js")}
+            style={{
+              ...styles.TagBtn,
+              backgroundColor: tag === "js" ? "#0FBCF9" : "lightgrey",
+            }}
+          >
             <Text>JavaScript</Text>
-          </View>
-          <View style={styles.TagBtn}>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setTag("react")}
+            style={{
+              ...styles.TagBtn,
+              backgroundColor: tag === "react" ? "#0FBCF9" : "lightgrey",
+            }}
+          >
             <Text>React</Text>
-          </View>
-          <View style={styles.TagBtn}>
+          </TouchableOpacity>
+          <TouchableOpacity
+            onPress={() => setTag("ct")}
+            style={{
+              ...styles.TagBtn,
+              backgroundColor: tag === "ct" ? "#0FBCF9" : "lightgrey",
+            }}
+          >
             <Text>Coding Test</Text>
-          </View>
+          </TouchableOpacity>
         </View>
         {/* TextInput 창 */}
         <View style={styles.InputBox}>
-          <TextInput style={styles.TodoInput} placeholder="Enter your task" />
+          <TextInput
+            onSubmitEditing={addTodo}
+            onChangeText={setText}
+            value={text}
+            style={styles.TodoInput}
+            placeholder="Enter your task"
+          />
         </View>
         {/* Todo List (Todo Item 여러개) */}
         <ScrollView>
-          <View style={styles.TodoItem}>
-            <Text>신나는 실행 컨텍스트 공부</Text>
-            <View style={{ flexDirection: "row" }}>
-              <AntDesign name="checksquare" size={24} color="black" />
-              <Feather
-                style={{ marginLeft: 10 }}
-                name="edit"
-                size={24}
-                color="black"
-              />
-              <AntDesign
-                style={{ marginLeft: 10 }}
-                name="delete"
-                size={24}
-                color="black"
-              />
-            </View>
-          </View>
-          <View style={styles.TodoItem}>
-            <Text>너무 좋은 ES6 최신문법 공부</Text>
-            <View style={{ flexDirection: "row" }}>
-              <AntDesign name="checksquare" size={24} color="black" />
-              <Feather
-                style={{ marginLeft: 10 }}
-                name="edit"
-                size={24}
-                color="black"
-              />
-              <AntDesign
-                style={{ marginLeft: 10 }}
-                name="delete"
-                size={24}
-                color="black"
-              />
-            </View>
-          </View>
+          {todos.map((todo) => {
+            if (tag === todo.tag) {
+              return (
+                <View key={todo.id} style={styles.TodoItem}>
+                  <Text
+                    style={{
+                      textDecorationLine: todo.isDone ? "line-through" : "none",
+                    }}
+                  >
+                    {todo.text}
+                  </Text>
+                  <View style={{ flexDirection: "row" }}>
+                    <TouchableOpacity onPress={() => setDone(todo.id)}>
+                      <AntDesign name="checksquare" size={24} color="black" />
+                    </TouchableOpacity>
+                    <Feather
+                      style={{ marginLeft: 10 }}
+                      name="edit"
+                      size={24}
+                      color="black"
+                    />
+                    <AntDesign
+                      style={{ marginLeft: 10 }}
+                      name="delete"
+                      size={24}
+                      color="black"
+                    />
+                  </View>
+                </View>
+              );
+            }
+          })}
         </ScrollView>
       </View>
     </SafeAreaView>
