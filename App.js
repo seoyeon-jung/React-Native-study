@@ -5,14 +5,12 @@ import {
   SafeAreaView,
   ScrollView,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   Alert,
 } from "react-native";
-import { AntDesign } from "@expo/vector-icons";
-import { Feather } from "@expo/vector-icons";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import TagList from "./components/TagList";
+import Todo from "./components/Todo";
 
 export default function App() {
   // state 만들기
@@ -112,37 +110,9 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safearea}>
       <StatusBar style="auto" />
-      {/* Button 3개 (범위 나누기) */}
       <View style={styles.container}>
-        <View style={styles.tags}>
-          <TouchableOpacity
-            onPress={() => setCategory("js")}
-            style={{
-              ...styles.tag,
-              backgroundColor: tag === "js" ? "#0FBCF9" : "grey",
-            }}
-          >
-            <Text style={styles.tagText}>Javascript</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setCategory("react")}
-            style={{
-              ...styles.tag,
-              backgroundColor: tag === "react" ? "#0FBCF9" : "grey",
-            }}
-          >
-            <Text style={styles.tagText}>React</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            onPress={() => setCategory("ct")}
-            style={{
-              ...styles.tag,
-              backgroundColor: tag === "ct" ? "#0FBCF9" : "grey",
-            }}
-          >
-            <Text style={styles.tagText}>Coding Test</Text>
-          </TouchableOpacity>
-        </View>
+        {/* Button 3개 (범위 나누기) */}
+        <TagList setCategory={setCategory} tag={tag} />
         {/* TextInput 창 */}
         <View style={styles.inputBox}>
           <TextInput
@@ -158,48 +128,15 @@ export default function App() {
           {todos.map((todo) => {
             if (tag === todo.tag) {
               return (
-                <View key={todo.id} style={styles.todoItem}>
-                  {todo.isEdit ? (
-                    <TextInput
-                      onSubmitEditing={() => editTodo(todo.id)}
-                      onChangeText={setEditText}
-                      value={editText}
-                      style={{ backgroundColor: "white", flex: 1 }}
-                    />
-                  ) : (
-                    <Text
-                      style={{
-                        textDecorationLine: todo.isDone
-                          ? "line-through"
-                          : "none",
-                      }}
-                    >
-                      {todo.text}
-                    </Text>
-                  )}
-
-                  <View style={{ flexDirection: "row" }}>
-                    <TouchableOpacity onPress={() => setDone(todo.id)}>
-                      <AntDesign name="checksquare" size={24} color="black" />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => setEdit(todo.id)}>
-                      <Feather
-                        style={{ marginLeft: 10 }}
-                        name="edit"
-                        size={24}
-                        color="black"
-                      />
-                    </TouchableOpacity>
-                    <TouchableOpacity onPress={() => deleteTodo(todo.id)}>
-                      <AntDesign
-                        style={{ marginLeft: 10 }}
-                        name="delete"
-                        size={24}
-                        color="black"
-                      />
-                    </TouchableOpacity>
-                  </View>
-                </View>
+                <Todo
+                  key={todo.id}
+                  todo={todo}
+                  editTodo={editTodo}
+                  setDone={setDone}
+                  setEdit={setEdit}
+                  setEditText={setEditText}
+                  deleteTodo={deleteTodo}
+                />
               );
             }
           })}
@@ -218,39 +155,11 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     paddingHorizontal: 20,
   },
-  tags: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-  },
-  tag: {
-    backgroundColor: "#0FBCF9",
-    paddingHorizontal: 10,
-    paddingVertical: 15,
-    width: "30%",
-    alignItems: "center",
-  },
-  tagText: {
-    fontWeight: "600",
-  },
   inputBox: {
     borderTopWidth: 1,
     borderBottomWidth: 1,
     paddingVertical: 15,
     marginTop: 15,
     marginBottom: 15,
-  },
-  TodoInput: {
-    borderWidth: 1,
-    paddingVertical: 10,
-    paddingHorizontal: 20,
-  },
-  todoItem: {
-    flexDirection: "row",
-    paddingVertical: 10,
-    paddingHorizontal: 10,
-    backgroundColor: "#D9D9D9",
-    alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 10,
   },
 });
