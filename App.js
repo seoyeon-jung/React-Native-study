@@ -8,17 +8,16 @@ import {
   Text,
   TouchableOpacity,
   Alert,
-  AsyncStorage,
 } from "react-native";
 import { AntDesign } from "@expo/vector-icons";
 import { Feather } from "@expo/vector-icons";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 export default function App() {
   // state 만들기
   const [todos, setTodos] = useState([]);
-  const [tag, setTag] = useState("js"); // 기본 setting: js (tag: js / react / coding test)
+  const [tag, setTag] = useState(""); // 기본 setting: js (tag: js / react / coding test)
   const [text, setText] = useState("");
   const [editText, setEditText] = useState("");
 
@@ -48,7 +47,9 @@ export default function App() {
   };
 
   // delete Todo
-  const deleteTodo = (key) => {
+  const deleteTodo = (id) => {
+    // 1. id 값을 받아서 해당 배열 요소를 제외한 나머지를 새로운 배열로 받는다.
+    // 2. setTodos
     Alert.alert("Todo 삭제", "정말 삭제하시겠습니까?", [
       {
         text: "취소",
@@ -56,6 +57,7 @@ export default function App() {
       },
       {
         text: "삭제",
+        style: "destructive",
         onPress: () => {
           const newTodos = todos.filter((todo) => todo.id !== id);
           setTodos(newTodos);
@@ -64,7 +66,15 @@ export default function App() {
     ]);
   };
 
-  // edit Todo
+  // setedit
+  const setEdit = (id) => {
+    const newTodos = [...todos];
+    const idx = newTodos.findIndex((todo) => todo.id === id);
+    newTodos[idx].isEdit = !newTodos[idx].isEdit;
+    setTodos(newTodos);
+  };
+
+  // edit todo
   const editTodo = (id) => {
     // id 값 받아서 해당 배열 요소를 찾아 그 해당 배열만 수정하기
     const newTodos = [...todos];
@@ -74,10 +84,10 @@ export default function App() {
     setTodos(newTodos);
   };
 
-  // tag
-  const setTagTodo = async (tag) => {
-    setTag(tag);
-    await AsyncStorage.setItem("tag", tag);
+  const setCategory = async (cat) => {
+    //console.log("cat:", cat);
+    setTag(cat);
+    await AsyncStorage.setItem("category", cat);
   };
 
   useEffect(() => {
@@ -91,10 +101,10 @@ export default function App() {
   useEffect(() => {
     const getData = async () => {
       const resp_todos = await AsyncStorage.getItem("todos"); // todos 배열
-      const resp_tag = await AsyncStorage.getItem("tag"); // undefiend / null
+      const resp_cat = await AsyncStorage.getItem("category"); // undefined / null
 
-      setTodos(JSON.parse(resp_todos));
-      setTagTodo(resp_tag ?? "js");
+      setTodos(JSON.parse(resp_todos) ?? []);
+      setCategory(resp_cat ?? "js");
     };
     getData();
   }, []);
@@ -102,45 +112,45 @@ export default function App() {
   return (
     <SafeAreaView style={styles.safearea}>
       <StatusBar style="auto" />
-      <View style={styles.safearea}>
-        {/* Button 3개 (범위 나누기) */}
-        <View style={styles.TagBtnList}>
+      {/* Button 3개 (범위 나누기) */}
+      <View style={styles.container}>
+        <View style={styles.tags}>
           <TouchableOpacity
-            onPress={() => setTag("js")}
+            onPress={() => setCategory("js")}
             style={{
-              ...styles.TagBtn,
-              backgroundColor: tag === "js" ? "#0FBCF9" : "lightgrey",
+              ...styles.tag,
+              backgroundColor: tag === "js" ? "#0FBCF9" : "grey",
             }}
           >
-            <Text>JavaScript</Text>
+            <Text style={styles.tagText}>Javascript</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setTag("react")}
+            onPress={() => setCategory("react")}
             style={{
-              ...styles.TagBtn,
-              backgroundColor: tag === "react" ? "#0FBCF9" : "lightgrey",
+              ...styles.tag,
+              backgroundColor: tag === "react" ? "#0FBCF9" : "grey",
             }}
           >
-            <Text>React</Text>
+            <Text style={styles.tagText}>React</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            onPress={() => setTag("ct")}
+            onPress={() => setCategory("ct")}
             style={{
-              ...styles.TagBtn,
-              backgroundColor: tag === "ct" ? "#0FBCF9" : "lightgrey",
+              ...styles.tag,
+              backgroundColor: tag === "ct" ? "#0FBCF9" : "grey",
             }}
           >
-            <Text>Coding Test</Text>
+            <Text style={styles.tagText}>Coding Test</Text>
           </TouchableOpacity>
         </View>
         {/* TextInput 창 */}
-        <View style={styles.InputBox}>
+        <View style={styles.inputBox}>
           <TextInput
             onSubmitEditing={addTodo}
             onChangeText={setText}
             value={text}
-            style={styles.TodoInput}
             placeholder="Enter your task"
+            style={styles.TodoInput}
           />
         </View>
         {/* Todo List (Todo Item 여러개) */}
@@ -148,7 +158,7 @@ export default function App() {
           {todos.map((todo) => {
             if (tag === todo.tag) {
               return (
-                <View key={todo.id} style={styles.TodoItem}>
+                <View key={todo.id} style={styles.todoItem}>
                   {todo.isEdit ? (
                     <TextInput
                       onSubmitEditing={() => editTodo(todo.id)}
@@ -180,7 +190,6 @@ export default function App() {
                         color="black"
                       />
                     </TouchableOpacity>
-
                     <TouchableOpacity onPress={() => deleteTodo(todo.id)}>
                       <AntDesign
                         style={{ marginLeft: 10 }}
@@ -209,18 +218,21 @@ const styles = StyleSheet.create({
     paddingVertical: 30,
     paddingHorizontal: 20,
   },
-  TagBtnList: {
+  tags: {
     flexDirection: "row",
     justifyContent: "space-between",
   },
-  TagBtn: {
-    backgroundColor: "lightgray",
+  tag: {
+    backgroundColor: "#0FBCF9",
     paddingHorizontal: 10,
     paddingVertical: 15,
     width: "30%",
     alignItems: "center",
   },
-  InputBox: {
+  tagText: {
+    fontWeight: "600",
+  },
+  inputBox: {
     borderTopWidth: 1,
     borderBottomWidth: 1,
     paddingVertical: 15,
@@ -232,7 +244,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
   },
-  TodoItem: {
+  todoItem: {
     flexDirection: "row",
     paddingVertical: 10,
     paddingHorizontal: 10,
