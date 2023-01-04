@@ -1,5 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { ScrollView, ActivityIndicator, RefreshControl } from "react-native";
+import {
+  ScrollView,
+  ActivityIndicator,
+  RefreshControl,
+  FlatList,
+  View,
+} from "react-native";
 import styled from "@emotion/native";
 import Swiper from "react-native-swiper";
 import Slide from "../components/Slide";
@@ -93,36 +99,39 @@ export default function Movies({ navigation: { navigate } }) {
   }
 
   return (
-    <ScrollView
-      refreshControl={
-        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+    <FlatList
+      refreshing={isRefreshing}
+      onRefresh={onRefresh}
+      ListHeaderComponent={
+        <>
+          {/* Main : movie poster & title/content (background: movie image)  */}
+          <Swiper height="100%" showsPagination={false} autoplay loop>
+            {nowPlayings.map((movie) => (
+              <Slide key={movie.id} movie={movie} />
+            ))}
+          </Swiper>
+
+          {/* Top Rated movies */}
+          <ListTitle>Top Rated Movies</ListTitle>
+          <FlatList
+            horizontal
+            contentContainerStyle={{ paddingHorizontal: 20 }}
+            showsHorizontalScrollIndicator={false}
+            data={topRated}
+            renderItem={({ item }) => <TopRated movie={item} />}
+            keyExtractor={(item) => item.id}
+            ItemSeparatorComponent={<View style={{ width: 10 }} />}
+          />
+
+          {/* UpComing movies */}
+          <ListTitle>Upcoming Movies</ListTitle>
+        </>
       }
-    >
-      {/* Main : movie poster & title/content (background: movie image)  */}
-      <Swiper height="100%" showsPagination={false} autoplay loop>
-        {nowPlayings.map((movie) => (
-          <Slide key={movie.id} movie={movie} />
-        ))}
-      </Swiper>
-
-      {/* Top Rated movies */}
-      <ListTitle>Top Rated Movies</ListTitle>
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 20 }}
-      >
-        {topRated.map((movie) => (
-          <TopRated key={movie.id} movie={movie} />
-        ))}
-      </ScrollView>
-
-      {/* Upcoming movies */}
-      <ListTitle>Upcoming Movies</ListTitle>
-      {upComing.map((movie) => (
-        <UpComing key={movie.id} movie={movie} />
-      ))}
-    </ScrollView>
+      data={upComing}
+      renderItem={({ item }) => <UpComing movie={item} />}
+      keyExtractor={(item) => item.id}
+      ItemSeparatorComponent={<View style={{ height: 15 }} />}
+    />
   );
 }
 

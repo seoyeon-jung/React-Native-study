@@ -25,7 +25,7 @@ export default function UpComing({ movie }) {
 const UpcomingRow = styled.TouchableOpacity`
   flex-direction: row;
   margin-left: 20px;
-  margin-bottom: 20px;
+  //margin-bottom: 20px;
 `;
 const UpcomingPoster = styled.Image`
   width: 100px;
