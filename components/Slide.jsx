@@ -3,8 +3,11 @@ import styled from "@emotion/native";
 import { SCREEN_HEIGHT, getImgPath } from "../util";
 import { StyleSheet } from "react-native";
 import { LinearGradient } from "expo-linear-gradient";
+import { useNavigation } from "@react-navigation/native";
 
 export default function Slide({ movie }) {
+  const { navigate } = useNavigation();
+
   return (
     <SwiperChildView>
       <BackgroundImg
@@ -14,7 +17,14 @@ export default function Slide({ movie }) {
         }}
       />
       <LinearGradient colors={["transparent", "black"]} />
-      <Row>
+      <Row
+        onPress={() =>
+          navigate("Stacks", {
+            screen: "Detail",
+            params: { movieId: movie.id },
+          })
+        }
+      >
         <Poster
           source={{
             uri: getImgPath(movie.poster_path),

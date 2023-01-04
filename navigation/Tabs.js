@@ -4,14 +4,23 @@ import Movies from "../screen/Movies";
 import My from "../screen/My";
 import { MaterialIcons } from "@expo/vector-icons";
 import { Foundation } from "@expo/vector-icons";
+import { useColorScheme } from "react-native";
+import { BLUE_COLOR, DARK_COLOR, GREY_COLOR, YELLOW_COLOR } from "../colors";
 
 const Tab = createBottomTabNavigator();
 
 export default function Tabs() {
+  const isDark = useColorScheme() === "dark";
+
   return (
     <Tab.Navigator
       screenOptions={{
         tabBarLabelPosition: "beside-icon",
+        tabBarActiveTintColor: isDark ? YELLOW_COLOR : BLUE_COLOR,
+        headerTintColor: isDark ? YELLOW_COLOR : BLUE_COLOR,
+      }}
+      sceneContainerStyle={{
+        backgroundColor: isDark ? DARK_COLOR : GREY_COLOR,
       }}
     >
       <Tab.Screen

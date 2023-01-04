@@ -1,10 +1,17 @@
 import React from "react";
 import styled from "@emotion/native";
 import { getImgPath } from "../util";
+import { useNavigation } from "@react-navigation/native";
 
 export default function UpComing({ movie }) {
+  const { navigate } = useNavigation();
+
   return (
-    <UpcomingRow onPress={() => {}}>
+    <UpcomingRow
+      onPress={() =>
+        navigate("Stacks", { screen: "Detail", params: { movieId: movie.id } })
+      }
+    >
       <UpcomingPoster
         source={{
           uri: getImgPath(movie.poster_path),
