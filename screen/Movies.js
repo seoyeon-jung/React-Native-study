@@ -1,80 +1,108 @@
-import React from "react";
-import {
-  ScrollView,
-  View,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-} from "react-native";
+import React, { useEffect, useState } from "react";
+import { ScrollView, ActivityIndicator, RefreshControl } from "react-native";
 import styled from "@emotion/native";
-import { LinearGradient } from "expo-linear-gradient";
-import { SCREEN_HEIGHT } from "../util";
 import Swiper from "react-native-swiper";
+import Slide from "../components/Slide";
+import TopRated from "../components/TopRated";
+import UpComing from "../components/UpComing";
 
 export default function Movies({ navigation: { navigate } }) {
-  const title = "movie title";
-  const rating = 7.5;
-  const overview =
-    "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.";
+  // slide (now playing)
+  const [nowPlayings, setNowPlayings] = useState([]);
+  // loading check
+  const [isLoading, setIsLoading] = useState(true);
+  // top rated movie
+  const [topRated, setTopRated] = useState([]);
+  // upcoming movie
+  const [upComing, setUpComing] = useState([]);
+  // refresh check
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  // API 이용할 때 필요한 URL과 KEY
+  const BASE_URL = "https://api.themoviedb.org/3/movie";
+  const API_KEY = "b3eb8003c5ad8fa2915d1fe18d0ee5a0";
+
+  // slide (now playing) 불러오기
+  const getNowPlayings = async () => {
+    const { results } = await fetch(
+      `${BASE_URL}/now_playing?api_key=${API_KEY}&language=en-US&page=1`
+    )
+      .then((res) => res.json())
+      .catch((error) => console.log(error));
+    setNowPlayings(results);
+    //setIsLoading(false);
+  };
+
+  // top rated movie
+  const getTopRated = async () => {
+    const { results } = await fetch(
+      `${BASE_URL}/top_rated?api_key=${API_KEY}&language=en-US&page=1`
+    )
+      .then((res) => res.json())
+      .catch((error) => console.log(error));
+
+    //console.log("results: ", results);
+    setTopRated(results);
+    //setIsLoading(false);
+  };
+
+  // upcoming movies
+  const getUpcoming = async () => {
+    const { results } = await fetch(
+      `${BASE_URL}/upcoming?api_key=${API_KEY}&language=en-US&page=1`
+    )
+      .then((res) => res.json())
+      .catch((error) => console.log(error));
+
+    // console.log("results: ", results);
+    setUpComing(results);
+    //setIsLoading(false);
+  };
+
+  // 한꺼번에 호출할 수 있는 함수
+  const getData = async () => {
+    // Promise.all : 순회 가능한 객체에 주어진 모든 프로미스가 이행한 후
+    // 혹은 프로미스가 주어지지 않았을 때 이행하는 Promise를 반환
+    // 모든 프로미스가 끝나야 다음 프로미스로 넘어감
+    await Promise.all([getNowPlayings(), getTopRated(), getUpcoming()]);
+    setIsLoading(false);
+    // async 함수는 항상 promise를 반환
+  };
+
+  // refresh
+  const onRefresh = async () => {
+    setIsRefreshing(true);
+    await getData();
+    setIsRefreshing(false);
+  };
+
+  useEffect(() => {
+    // getNowPlayings();
+    // getTopRated();
+    // getUpcoming();
+    getData();
+  }, []);
+
+  // loading 중인지 아닌지
+  if (isLoading) {
+    return (
+      <Loader>
+        <ActivityIndicator />
+      </Loader>
+    );
+  }
 
   return (
-    <ScrollView>
+    <ScrollView
+      refreshControl={
+        <RefreshControl refreshing={isRefreshing} onRefresh={onRefresh} />
+      }
+    >
       {/* Main : movie poster & title/content (background: movie image)  */}
       <Swiper height="100%" showsPagination={false} autoplay loop>
-        <SwiperChildView>
-          <BackgroundImg
-            style={StyleSheet.absoluteFill}
-            source={require("../assets/sample.jpg")}
-          />
-          <LinearGradient colors={["transparent", "black"]} />
-          <Row>
-            <Poster source={require("../assets/sample.jpg")} />
-            <Column>
-              <Title>{title}</Title>
-              <Rating>⭐️{rating}/10</Rating>
-              <Overview>
-                {overview.slice(0, 150)}
-                {overview.length > 150 && "..."}
-              </Overview>
-            </Column>
-          </Row>
-        </SwiperChildView>
-        <SwiperChildView>
-          <BackgroundImg
-            style={StyleSheet.absoluteFill}
-            source={require("../assets/sample.jpg")}
-          />
-          <LinearGradient colors={["transparent", "black"]} />
-          <Row>
-            <Poster source={require("../assets/sample.jpg")} />
-            <Column>
-              <Title>{title}</Title>
-              <Rating>⭐️{rating}/10</Rating>
-              <Overview>
-                {overview.slice(0, 150)}
-                {overview.length > 150 && "..."}
-              </Overview>
-            </Column>
-          </Row>
-        </SwiperChildView>
-        <SwiperChildView>
-          <BackgroundImg
-            style={StyleSheet.absoluteFill}
-            source={require("../assets/sample.jpg")}
-          />
-          <LinearGradient colors={["transparent", "black"]} />
-          <Row>
-            <Poster source={require("../assets/sample.jpg")} />
-            <Column>
-              <Title>{title}</Title>
-              <Rating>⭐️{rating}/10</Rating>
-              <Overview>
-                {overview.slice(0, 150)}
-                {overview.length > 150 && "..."}
-              </Overview>
-            </Column>
-          </Row>
-        </SwiperChildView>
+        {nowPlayings.map((movie) => (
+          <Slide key={movie.id} movie={movie} />
+        ))}
       </Swiper>
 
       {/* Top Rated movies */}
@@ -84,136 +112,24 @@ export default function Movies({ navigation: { navigate } }) {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 20 }}
       >
-        <VWrapper>
-          <TRPoster source={require("../assets/sample.jpg")} />
-          <TRColumn>
-            <Rating>⭐️{rating}/10</Rating>
-            <TRTitle>
-              {title.slice(0, 11)}
-              {title.length > 11 && "..."}
-            </TRTitle>
-          </TRColumn>
-        </VWrapper>
-        <VWrapper>
-          <TRPoster source={require("../assets/sample.jpg")} />
-          <TRColumn>
-            <Rating>⭐️{rating}/10</Rating>
-            <TRTitle>
-              {title.slice(0, 11)}
-              {title.length > 11 && "..."}
-            </TRTitle>
-          </TRColumn>
-        </VWrapper>
-        <VWrapper>
-          <TRPoster source={require("../assets/sample.jpg")} />
-          <TRColumn>
-            <Rating>⭐️{rating}/10</Rating>
-            <TRTitle>
-              {title.slice(0, 11)}
-              {title.length > 11 && "..."}
-            </TRTitle>
-          </TRColumn>
-        </VWrapper>
-        <VWrapper>
-          <TRPoster source={require("../assets/sample.jpg")} />
-          <TRColumn>
-            <Rating>⭐️{rating}/10</Rating>
-            <TRTitle>
-              {title.slice(0, 11)}
-              {title.length > 11 && "..."}
-            </TRTitle>
-          </TRColumn>
-        </VWrapper>
+        {topRated.map((movie) => (
+          <TopRated key={movie.id} movie={movie} />
+        ))}
       </ScrollView>
 
       {/* Upcoming movies */}
       <ListTitle>Upcoming Movies</ListTitle>
-      <UpcomingRow onPress={() => {}}>
-        <UpcomingPoster source={require("../assets/sample.jpg")} />
-        <UpcomingColumn>
-          <UpcomingTitle>{title}</UpcomingTitle>
-          <Release>{"2022-12-02"}</Release>
-          <UpcomingOverview>
-            {overview.slice(0, 70)}
-            {overview.length > 70 && "..."}
-          </UpcomingOverview>
-        </UpcomingColumn>
-      </UpcomingRow>
-      <UpcomingRow onPress={() => {}}>
-        <UpcomingPoster source={require("../assets/sample.jpg")} />
-        <UpcomingColumn>
-          <UpcomingTitle>{title}</UpcomingTitle>
-          <Release>{"2022-12-02"}</Release>
-          <UpcomingOverview>
-            {overview.slice(0, 70)}
-            {overview.length > 70 && "..."}
-          </UpcomingOverview>
-        </UpcomingColumn>
-      </UpcomingRow>
+      {upComing.map((movie) => (
+        <UpComing key={movie.id} movie={movie} />
+      ))}
     </ScrollView>
   );
 }
 
-const UpcomingRow = styled.TouchableOpacity`
-  flex-direction: row;
-  margin-left: 20px;
-  margin-bottom: 20px;
-`;
-const UpcomingPoster = styled.Image`
-  width: 100px;
-  height: 150px;
-  background-color: grey;
-  border-radius: 5px;
-`;
-const UpcomingTitle = styled.Text`
-  font-size: 20px;
-  font-weight: 500;
-  color: ${(props) => props.theme.upcomingText};
-`;
-
-const UpcomingOverview = styled.Text`
-  font-size: 15px;
-  line-height: 20px;
-  font-weight: 500;
-  color: ${(props) => props.theme.upcomingText};
-`;
-
-const UpcomingColumn = styled.View`
-  margin-left: 20px;
-  width: 60%;
-`;
-
-const Release = styled.Text`
-  font-size: 16px;
-  font-weight: 300;
-  color: ${(props) => props.theme.upcomingText};
-  margin-top: 10px;
-  margin-bottom: 10px;
-`;
-
-const UpcomingView = styled.View``;
-
-const TRPoster = styled.Image`
-  width: 120px;
-  height: 170px;
-  background-color: grey;
-  border-top-left-radius: 5px;
-  border-top-right-radius: 5px;
-`;
-const TRTitle = styled.Text`
-  font-size: 13px;
-  font-weight: 600;
-  color: white;
-`;
-
-const VWrapper = styled.TouchableOpacity`
-  background-color: black;
-  border-radius: 5px;
-  margin-right: 10px;
-`;
-
-const TRColumn = styled.View`
-  padding: 10px;
+const Loader = styled.View`
+  flex: 1;
+  justify-content: center;
+  align-items: center;
 `;
 
 const ListTitle = styled.Text`
@@ -223,53 +139,4 @@ const ListTitle = styled.Text`
   font-size: 20px;
   font-weight: 500;
   color: ${(props) => props.theme.title};
-`;
-
-const Rating = styled.Text`
-  color: white;
-  margin-top: 5px;
-  margin-bottom: 5px;
-`;
-
-const SwiperChildView = styled.View`
-  flex: 1;
-  justify-content: flex-end;
-  height: ${SCREEN_HEIGHT / 3 + "px"};
-  background-color: green;
-`;
-
-const BackgroundImg = styled.Image`
-  height: 100%;
-  width: 100%;
-`;
-
-const Row = styled.TouchableOpacity`
-  flex: 1;
-  flex-direction: row;
-  align-items: flex-end;
-`;
-
-const Column = styled.View`
-  width: 65%;
-  margin-left: 10px;
-  margin-bottom: 10px;
-`;
-
-const Poster = styled.Image`
-  width: 100px;
-  height: 160px;
-  /* height: 100%; */
-  margin-left: 10px;
-  margin-bottom: 10px;
-`;
-
-const Title = styled.Text`
-  font-size: 20px;
-  font-weight: 600;
-  color: white;
-`;
-
-const Overview = styled.Text`
-  font-size: 12px;
-  color: white;
 `;
