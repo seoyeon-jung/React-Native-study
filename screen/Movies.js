@@ -5,89 +5,81 @@ import {
   RefreshControl,
   FlatList,
   View,
+  Alert,
 } from "react-native";
 import styled from "@emotion/native";
 import Swiper from "react-native-swiper";
 import Slide from "../components/Slide";
 import TopRated from "../components/TopRated";
 import UpComing from "../components/UpComing";
+import { useInfiniteQuery, useQuery, useQueryClient } from "react-query";
+import { getNowPlayings, getTopRated, getUpcoming } from "../api";
 
 export default function Movies({ navigation: { navigate } }) {
-  // slide (now playing)
-  const [nowPlayings, setNowPlayings] = useState([]);
-  // loading check
-  const [isLoading, setIsLoading] = useState(true);
-  // top rated movie
-  const [topRated, setTopRated] = useState([]);
-  // upcoming movie
-  const [upComing, setUpComing] = useState([]);
+  // // slide (now playing)
+  // const [nowPlayings, setNowPlayings] = useState([]);
+  // // loading check
+  // const [isLoading, setIsLoading] = useState(true);
+  // // top rated movie
+  // const [topRated, setTopRated] = useState([]);
+  // // upcoming movie
+  // const [upComing, setUpComing] = useState([]);
+  // server state는 usequery가 관라히가 때문에 useState가 관리할 필요 없다
+
   // refresh check
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  // API 이용할 때 필요한 URL과 KEY
-  const BASE_URL = "https://api.themoviedb.org/3/movie";
-  const API_KEY = "b3eb8003c5ad8fa2915d1fe18d0ee5a0";
+  // queryclient (어떤 컴포넌트에 있어도 cache memory는 하나)
+  const queryClient = useQueryClient();
 
-  // slide (now playing) 불러오기
-  const getNowPlayings = async () => {
-    const { results } = await fetch(
-      `${BASE_URL}/now_playing?api_key=${API_KEY}&language=en-US&page=1`
-    )
-      .then((res) => res.json())
-      .catch((error) => console.log(error));
-    setNowPlayings(results);
-    //setIsLoading(false);
-  };
-
-  // top rated movie
-  const getTopRated = async () => {
-    const { results } = await fetch(
-      `${BASE_URL}/top_rated?api_key=${API_KEY}&language=en-US&page=1`
-    )
-      .then((res) => res.json())
-      .catch((error) => console.log(error));
-
-    //console.log("results: ", results);
-    setTopRated(results);
-    //setIsLoading(false);
-  };
-
-  // upcoming movies
-  const getUpcoming = async () => {
-    const { results } = await fetch(
-      `${BASE_URL}/upcoming?api_key=${API_KEY}&language=en-US&page=1`
-    )
-      .then((res) => res.json())
-      .catch((error) => console.log(error));
-
-    // console.log("results: ", results);
-    setUpComing(results);
-    //setIsLoading(false);
-  };
-
-  // 한꺼번에 호출할 수 있는 함수
-  const getData = async () => {
-    // Promise.all : 순회 가능한 객체에 주어진 모든 프로미스가 이행한 후
-    // 혹은 프로미스가 주어지지 않았을 때 이행하는 Promise를 반환
-    // 모든 프로미스가 끝나야 다음 프로미스로 넘어감
-    await Promise.all([getNowPlayings(), getTopRated(), getUpcoming()]);
-    setIsLoading(false);
-    // async 함수는 항상 promise를 반환
-  };
+  // useQuery
+  const { data: nowPlayingData, isLoading: isLoadingNP } = useQuery(
+    ["Movies", "NowPlayings"],
+    getNowPlayings
+  );
+  const { data: topRatedData, isLoading: isLoadingTR } = useQuery(
+    ["Movies", "TopRated"],
+    getTopRated
+  );
+  const {
+    data: upComingData,
+    isLoading: isLoadingUC,
+    fetchNextPage,
+    hasNextPage,
+  } = useInfiniteQuery(["Movies", "UpComing"], getUpcoming, {
+    getNextPageParam: (lastPage) => {
+      // 다음 페이지가 있으면 +1
+      if (lastPage.page < lastPage.total_pages) {
+        return lastPage.page + 1;
+        // return 값이 page params로 넘어감
+      }
+    },
+  });
 
   // refresh
   const onRefresh = async () => {
     setIsRefreshing(true);
-    await getData();
+
+    // refetch를 해야 한다 (data를 서버에서 받오는 게 fetch)
+    // refetch : 한번 더 받아오는 것 (refresh를 했을 떄)
+    // fetch함수와 무관하게 refetch를 하는 것
+    //await Promise.all(refetchNP(), refetchTR(), refetchUC());
+
+    // Movies를 가지고 있는 fetcher 함수가 모두 일괄적으로 실행된다
+    await queryClient.refetchQueries(["Movies"]);
     setIsRefreshing(false);
   };
 
-  useEffect(() => {
-    // getNowPlayings();
-    // getTopRated();
-    // getUpcoming();
-    getData();
-  }, []);
+  // 3개의 loading state 중 하나라도 true이면 loading 화면이 보인다
+  const isLoading = isLoadingNP || isLoadingTR || isLoadingUC;
+
+  // infinity scroll
+  const fetchMore = async () => {
+    // fetch next page
+    if (hasNextPage) {
+      await fetchNextPage();
+    }
+  };
 
   // loading 중인지 아닌지
   if (isLoading) {
@@ -100,13 +92,16 @@ export default function Movies({ navigation: { navigate } }) {
 
   return (
     <FlatList
+      onEndReached={fetchMore}
+      // screen 절반 길이만큼
+      onEndReachedThreshold={0.5}
       refreshing={isRefreshing}
       onRefresh={onRefresh}
       ListHeaderComponent={
         <>
           {/* Main : movie poster & title/content (background: movie image)  */}
           <Swiper height="100%" showsPagination={false} autoplay loop>
-            {nowPlayings.map((movie) => (
+            {nowPlayingData.results.map((movie) => (
               <Slide key={movie.id} movie={movie} />
             ))}
           </Swiper>
@@ -117,7 +112,7 @@ export default function Movies({ navigation: { navigate } }) {
             horizontal
             contentContainerStyle={{ paddingHorizontal: 20 }}
             showsHorizontalScrollIndicator={false}
-            data={topRated}
+            data={topRatedData.results}
             renderItem={({ item }) => <TopRated movie={item} />}
             keyExtractor={(item) => item.id}
             ItemSeparatorComponent={<View style={{ width: 10 }} />}
@@ -127,7 +122,8 @@ export default function Movies({ navigation: { navigate } }) {
           <ListTitle>Upcoming Movies</ListTitle>
         </>
       }
-      data={upComing}
+      // 누적되어지는 1차 영화 리스트
+      data={upComingData.pages.map((page) => page.results).flat()}
       renderItem={({ item }) => <UpComing movie={item} />}
       keyExtractor={(item) => item.id}
       ItemSeparatorComponent={<View style={{ height: 15 }} />}

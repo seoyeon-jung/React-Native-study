@@ -9,6 +9,8 @@ import styled from "@emotion/native";
 import { getImgPath, SCREEN_HEIGHT } from "../util";
 import { LinearGradient } from "expo-linear-gradient";
 import { AntDesign } from "@expo/vector-icons";
+import { useQuery } from "react-query";
+import { getDetail } from "../api";
 
 export default function Detail({
   navigation: { navigate },
@@ -17,33 +19,17 @@ export default function Detail({
   },
 }) {
   // data
-  const [data, setData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
+  // const [data, setData] = useState(null);
+  // const [isLoading, setIsLoading] = useState(true);
   const isDark = useColorScheme() === "dark";
 
-  // API_KEY & BASIC_URL
-  const BASE_URL = "https://api.themoviedb.org/3/movie";
-  const API_KEY = "b3eb8003c5ad8fa2915d1fe18d0ee5a0";
-
-  const getDetaili = async () => {
-    const response = await fetch(
-      `${BASE_URL}/${movieId}?api_key=${API_KEY}&language=en-US&append_to_response=videos`
-    )
-      .then((res) => res.json())
-      .catch((error) => console.log(error));
-
-    setData(response);
-    setIsLoading(false);
-  };
+  // movieId라는 queryKey가 getDetail에 넘어간다 (배열 형태로)
+  const { data, isLoading } = useQuery(["Detail", movieId], getDetail);
 
   const openYoutube = async (key) => {
     const url = `https://www.youtube.com/watch?v=${key}`;
     await Linking.openURL(url);
   };
-
-  useEffect(() => {
-    getDetaili();
-  }, []);
 
   if (isLoading) {
     return (
