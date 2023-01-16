@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "RN-movie-review",
+    "slug": "RN-movie-review",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/7f8fedd5-b46f-47aa-a9db-217626ec0bd7"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7f8fedd5-b46f-47aa-a9db-217626ec0bd7"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    }
+  }
+}
