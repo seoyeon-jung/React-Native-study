@@ -1,0 +1,40 @@
+{
+  "expo": {
+    "name": "rn-moviereview-prac",
+    "slug": "rn-moviereview-prac",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0,
+      "url": "https://u.expo.dev/eaa239c9-ff6f-4885-bb2c-dadfd1888f3b"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#FFFFFF"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "eaa239c9-ff6f-4885-bb2c-dadfd1888f3b"
+      }
+    },
+    "runtimeVersion": {
+      "policy": "sdkVersion"
+    }
+  }
+}
